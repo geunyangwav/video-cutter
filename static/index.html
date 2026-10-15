@@ -27,6 +27,7 @@
   --display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
   --sans: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
   --mincho: "Hiragino Mincho ProN", "YuMincho", serif;
+  --toggle-on: #34c759;      /* 애플 시스템 초록 (켜짐 스위치) */
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -34,7 +35,7 @@
     --paper: #141917; --card: #1b211f; --ink: #e2e8e3; --ink-2: #a1aca7; --ink-3: #66716c;
     --line: #27302d; --line-2: #33403b;
     --sky: #8eaec6; --sky-soft: rgba(142, 174, 198, .16);
-    --sage: #7f9c86; --butter: #3a3828; --honey: #d6bf80;
+    --sage: #7f9c86; --butter: #3a3828; --honey: #d6bf80; --toggle-on: #30d158;
     --shadow: 0 20px 40px -28px rgba(0,0,0,.6);
     color-scheme: dark;
   }
@@ -165,7 +166,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
 .switch input { display: none; }
 .switch i { position: relative; width: 30px; height: 18px; border-radius: 9px; background: var(--line-2); transition: background .2s; }
 .switch i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--card); box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .2s; }
-.switch input:checked + i { background: var(--sage); }
+.switch input:checked + i { background: var(--toggle-on); }
 .switch input:checked + i::after { transform: translateX(12px); }
 details.script { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
 details.script summary { cursor: pointer; list-style: none; color: var(--ink-2); font-size: 13px; display: flex; justify-content: space-between; }
