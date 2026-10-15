@@ -1,0 +1,10 @@
+# 개인 파일 · 실행 중 생기는 파일 (배포하지 않음)
+.venv/
+uploads/
+cache/
+server.log
+__pycache__/
+*.pyc
+.DS_Store
+assets/icon.iconset/
+launcher.applescript

@@ -1,0 +1,11 @@
+# effecting 실행에 필요한 패키지 (설치 스크립트가 자동으로 설치해요)
+pycapcut==0.0.3
+mlx-whisper==0.4.3
+fastapi==0.143.0
+uvicorn[standard]==0.54.0
+python-multipart==0.0.32
+imageio-ffmpeg==0.6.0
+pymediainfo==7.0.1
+numpy==2.4.6
+pyobjc-framework-Vision==12.2.2
+pyobjc-framework-Quartz==12.2.2
