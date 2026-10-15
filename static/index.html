@@ -397,7 +397,7 @@ function showResult(el, r) {
   q(".sCut").textContent = "−" + fmt(r.removed);
   q(".clips").textContent = (r.videos > 1 ? `영상 ${r.videos}개 · ` : "") + `클립 ${r.clips}개` + (r.captions ? ` · 자막 ${r.captions}줄` : "") + ` · ${r.size}`;
   q(".script").style.display = r.transcript.length ? "" : "none";
-  const KIND = { filler: "잔말 · 잘림", particle: "조사 · 잘림", maybe: "잔말일까요?", ng: "다시 말함?" };
+  const KIND = { filler: "잔말 · 잘림", particle: "조사 · 다듬음", maybe: "잔말? · 남겨둠", ng: "반복한 말 · 남겨둠" };
   const marks = r.marks || [];
   q(".sugg").innerHTML = marks.map(m => `<li><span class="num">${fmt(m.start)}</span><b class="tag ${m.auto ? "cut" : ""}">${KIND[m.kind]}</b><div></div></li>`).join("");
   [...q(".sugg").children].forEach((li, i) => {
@@ -405,7 +405,7 @@ function showResult(el, r) {
     t.textContent = marks[i].text; if (marks[i].kind !== "filler") t.style.color = "var(--ink)"; li.lastChild.appendChild(t);
   });
   const nSug = marks.filter(m => !m.auto).length;
-  q(".hint").textContent = nSug ? "제안은 자르지 않고 그대로 두었어요. CapCut에서 보고 골라 주세요." : "";
+  q(".hint").textContent = nSug ? "반복한 말과 애매한 말은 자르지 않고 남겨뒀어요. CapCut에서 보고 골라 주세요." : "";
   q(".lines").innerHTML = r.transcript.map(t => `<li><span class="num">${fmt(t.start)}</span><div></div></li>`).join("");
   [...q(".lines").children].forEach((li, i) => li.lastChild.textContent = r.transcript[i].text);
   q(".map").innerHTML = r.keeps.map(([s, e]) =>
