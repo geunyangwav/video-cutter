@@ -66,8 +66,9 @@ async def _analyze(path: Path, p: SilenceParams, want_captions: bool, emit) -> A
     kept = sum(e - s for s, e in keeps)
     await emit("silence", "done", f"{len(keeps)}개 구간 · {info.duration - kept:.1f}s 덜어냄", dt)
 
+    # 음성 인식 · 잔말 컷은 항상 한다 (잔말을 찾으려면 받아쓰기가 필요). 자막 트랙만 스위치를 따른다.
     captions, transcript, marks, placement, cap_y = [], None, [], None, None
-    if want_captions:
+    if True:
         await emit("asr", "running", "" if _model_ready() else "처음 한 번은 모델을 내려받아요")
         async with ASR_LOCK:
             (transcript, hit), dt = await _timed(transcribe, audio, content_hash(path))
@@ -84,7 +85,8 @@ async def _analyze(path: Path, p: SilenceParams, want_captions: bool, emit) -> A
         n_sug = sum(not m.auto for m in marks)
         await emit("filler", "done", f"{len(auto)}곳 다듬음" + (f" · 제안 {n_sug}개" if n_sug else ""), dt)
 
-        captions = captions_from(transcript, cuts, skip=[(m.start, m.end) for m in marks if m.kind == "filler"])
+        if want_captions:
+            captions = captions_from(transcript, cuts, skip=[(m.start, m.end) for m in marks if m.kind == "filler"])
         if captions:
             cy, placement = await asyncio.to_thread(caption_y, str(path), keeps)
             cap_y = to_transform_y(cy)
@@ -102,7 +104,7 @@ async def run(job: Job) -> AsyncIterator[dict]:
         steps = [{"id": f"v{i}", "label": f"{i + 1}. {n}"} for i, n in enumerate(job.filenames)]
         steps.append({"id": "draft", "label": "CapCut 프로젝트 하나로"})
     else:
-        steps = [{"id": i, "label": l} for i, l in STEPS if job.captions or i not in ("asr", "filler")]
+        steps = [{"id": i, "label": l if (i != "draft" or job.captions) else "CapCut 프로젝트"} for i, l in STEPS]
     yield {"type": "steps", "steps": steps}
 
     queue: asyncio.Queue = asyncio.Queue()
