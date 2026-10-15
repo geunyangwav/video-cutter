@@ -55,6 +55,27 @@ def _chin_y(img: Path) -> float | None:
     return 1.0 - bottom
 
 
+def _product_boxes(img: Path) -> list[tuple[float, float, float, float]]:
+    """눈에 띄는 물체(제품+손) 상자들. (x0, y0, x1, y1), 왼쪽 위가 원점인 0~1 좌표."""
+    import Quartz
+    import Vision
+    from Foundation import NSURL
+
+    src = Quartz.CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(str(img)), None)
+    if not src:
+        return []
+    cg = Quartz.CGImageSourceCreateImageAtIndex(src, 0, None)
+    req = Vision.VNGenerateObjectnessBasedSaliencyImageRequest.alloc().init()
+    handler = Vision.VNImageRequestHandler.alloc().initWithCGImage_options_(cg, None)
+    ok, _ = handler.performRequests_error_([req], None)
+    res = list(req.results() or []) if ok else []
+    out = []
+    for o in (list(res[0].salientObjects() or []) if res else []):
+        bb = o.boundingBox()
+        out.append((bb.origin.x, 1 - bb.origin.y - bb.size.height, bb.origin.x + bb.size.width, 1 - bb.origin.y))
+    return out
+
+
 def _product_top(img: Path) -> float | None:
     """눈에 띄는 물체(제품+손)의 윗변 y (위에서부터 0~1)."""
     import Quartz
@@ -110,30 +131,50 @@ def to_transform_y(center_y: float) -> float:
     return 1.0 - 2.0 * center_y
 
 
-def product_caption_ys(path: str, times: list[float]) -> list[float]:
-    """제품 컷: 자막마다 그 순간 화면에서 제품 윗변 바로 위 (위에서부터 0~1).
-    제품이 화면 꼭대기까지 올라오면 PRODUCT_MIN 에 붙인다."""
-    tops: list[float | None] = []
+# 제품 영상: 자막은 영상 전체에서 한 위치로 고정하되, 여러 장면의 제품을 가장 덜 가리는 높이를 고른다.
+CAPTION_BAND = 0.05        # 자막 한 줄이 차지하는 높이 (화면 비율)
+CAPTION_X = (0.15, 0.85)   # 자막이 차지하는 가로 범위 (가운데 정렬)
+SAFE_TOP, SAFE_BOTTOM = 0.11, 0.80   # 숏폼 앱 UI 에 가리지 않는 범위
+PREFERRED_Y = 0.25         # 비슷하게 안 가린다면 이 높이에 가까운 쪽 (화면 위쪽 1/4)
+
+
+def product_fixed_y(path: str, times: list[float]) -> float:
+    """자막이 나오는 순간들의 화면을 보고, 제품과 겹치는 장면이 가장 적은 높이 (위에서부터 0~1)."""
+    frames: list[list[tuple[float, float, float, float]]] = []
+    with tempfile.TemporaryDirectory() as d:
+        step = max(1, len(times) // 40)          # 많아도 40장면만 본다
+        for i, t in enumerate(times[::step]):
+            f = _grab_frames(path, [t], Path(d), 480)
+            if f:
+                fr = Path(d) / f"c{i}.jpg"
+                f[0].rename(fr)
+                frames.append(_product_boxes(fr))
+    frames = [b for b in frames if b]
+    if not frames:
+        return PRODUCT_Y
+
+    def covered(y: float) -> float:
+        """이 높이에 자막을 두면 제품과 겹치는 장면 비율."""
+        y0, y1 = y - CAPTION_BAND / 2, y + CAPTION_BAND / 2
+        hit = 0
+        for boxes in frames:
+            if any(bx0 < CAPTION_X[1] and bx1 > CAPTION_X[0] and by0 < y1 and by1 > y0
+                   for bx0, by0, bx1, by1 in boxes):
+                hit += 1
+        return hit / len(frames)
+
+    candidates = [round(SAFE_TOP + i * 0.01, 2) for i in range(int((SAFE_BOTTOM - SAFE_TOP) / 0.01) + 1)]
+    return min(candidates, key=lambda y: covered(y) + 0.1 * abs(y - PREFERRED_Y))
+
+
+def product_cover_rate(path: str, times: list[float], y: float) -> float:
+    """확인용: 고른 높이에서 제품과 겹치는 장면 비율."""
+    frames = []
     with tempfile.TemporaryDirectory() as d:
         for i, t in enumerate(times):
-            f = _grab_frames(path, [t], Path(d) / "", 480)
-            fr = Path(d) / f"c{i}.jpg"
+            f = _grab_frames(path, [t], Path(d), 480)
             if f:
-                f[0].rename(fr)
-                tops.append(_product_top(fr))
-            else:
-                tops.append(None)
-    ys = [PRODUCT_Y if top is None else min(max(top - PRODUCT_GAP, PRODUCT_MIN), PRODUCT_MAX) for top in tops]
-    # 같은 장면에서 자막이 들썩이지 않도록, 앞 자막과 4% 이내 차이면 그대로 둔다
-    for i in range(1, len(ys)):
-        if abs(ys[i] - ys[i - 1]) < 0.04:
-            ys[i] = ys[i - 1]
-    return ys
-
-
-def fixed_product_y(ys: list[float]) -> float:
-    """자막별 '제품 바로 위' 높이들 → 영상 전체 고정 높이.
-    중앙값을 쓰되 너무 위(상단 UI)로는 가지 않게 한다. 제품 윗부분이 살짝 겹칠 수는 있다."""
-    if not ys:
-        return PRODUCT_Y
-    return min(max(statistics.median(ys), 0.16), PRODUCT_MAX)
+                frames.append(_product_boxes(f[0]))
+    y0, y1 = y - CAPTION_BAND / 2, y + CAPTION_BAND / 2
+    hits = sum(any(b[0] < CAPTION_X[1] and b[2] > CAPTION_X[0] and b[1] < y1 and b[3] > y0 for b in bx) for bx in frames if bx)
+    return hits / max(1, sum(1 for bx in frames if bx))

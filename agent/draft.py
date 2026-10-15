@@ -1,4 +1,4 @@
-"""pycapcut으로 CapCut 드래프트(effecting_N) 생성."""
+"""pycapcut으로 CapCut 프로젝트(cut_N) 생성."""
 from __future__ import annotations
 
 import json
@@ -17,7 +17,7 @@ from pycapcut import trange
 from .media import MediaInfo
 
 DRAFT_ROOT = Path.home() / "Movies/CapCut/User Data/Projects/com.lveditor.draft"
-PREFIX = "effecting_"
+PREFIX = "cut_"
 US = 1_000_000
 # CapCut 에 설치된 사용자 글꼴 (조선굴림체). 없으면 CapCut 기본 글꼴.
 CAPTION_FONT = Path.home() / "Library/Containers/com.lemon.lvoverseas/Data/Library/Fonts/ChosunGu.TTF"

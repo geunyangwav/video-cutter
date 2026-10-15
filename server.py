@@ -1,10 +1,14 @@
-"""effecting 웹 서버 (CapCut용 자동 컷편집).
+"""Video Cutter 웹 서버 (캡컷 컷편집 자동화).
 
     .venv/bin/python server.py   →  http://localhost:8765
 """
 from __future__ import annotations
 
 import json
+import os
+
+# 사용 통계 전송 끄기 (huggingface)
+os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 import shutil
 import uuid
 from pathlib import Path

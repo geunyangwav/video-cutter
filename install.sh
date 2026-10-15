@@ -1,27 +1,27 @@
 #!/bin/bash
-# effecting 설치 스크립트 — CapCut용 자동 컷편집 (made by @geunyang_wav)
+# Video Cutter 설치 스크립트 — 캡컷 컷편집 자동화 도구 (made by @geunyang_wav)
 #
 #   터미널에 붙여넣기:
-#   curl -fsSL https://raw.githubusercontent.com/geunyangwav/effecting/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/geunyangwav/video-cutter/main/install.sh | bash
 #
-# 하는 일: ~/effecting 에 프로그램을 받고, 필요한 도구를 설치하고, 바탕화면에 effecting 아이콘을 만듭니다.
+# 하는 일: ~/video-cutter 에 프로그램을 받고, 필요한 도구를 설치하고, 바탕화면에 Video Cutter 아이콘을 만듭니다.
 # 다시 실행하면 최신 버전으로 업데이트돼요. (만든 CapCut 프로젝트는 그대로)
 set -euo pipefail
 
-REPO="geunyangwav/effecting"
-DEST="${EFFECTING_HOME:-$HOME/effecting}"
-APP="${EFFECTING_APP:-$HOME/Desktop/effecting.app}"
+REPO="geunyangwav/video-cutter"
+DEST="${EFFECTING_HOME:-$HOME/video-cutter}"
+APP="${EFFECTING_APP:-$HOME/Desktop/Video Cutter.app}"
 PORT=8765
 DRAFTS="$HOME/Movies/CapCut/User Data/Projects/com.lveditor.draft"
 
 step() { printf "\n\033[1m● %s\033[0m\n" "$*"; }
 note() { printf "  %s\n" "$*"; }
 
-printf "\n\033[1meffecting 설치\033[0m · CapCut용 자동 컷편집\n"
+printf "\n\033[1mVideo Cutter 설치\033[0m · 캡컷 컷편집 자동화 도구\n"
 
 # 0. 이 맥에서 쓸 수 있는지
 if [ "$(uname -s)" != "Darwin" ] || [ "$(uname -m)" != "arm64" ]; then
-  echo "죄송해요. effecting 은 M칩(Apple Silicon) 맥에서만 쓸 수 있어요."; exit 1
+  echo "죄송해요. Video Cutter 는 M칩(Apple Silicon) 맥에서만 쓸 수 있어요."; exit 1
 fi
 if [ ! -d "$DRAFTS" ]; then
   note "⚠️  CapCut 프로젝트 폴더가 아직 없어요. CapCut 데스크톱 앱을 설치하고 한 번 실행해 주세요."
@@ -36,9 +36,9 @@ elif [ -f "$(dirname "${BASH_SOURCE[0]:-$0}")/server.py" ]; then
   SRC="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"   # 받은 폴더에서 '설치하기'를 더블클릭한 경우
 else
   TMP="$(mktemp -d)"
-  curl -fsSL "https://codeload.github.com/$REPO/zip/refs/heads/main" -o "$TMP/effecting.zip"
-  unzip -q "$TMP/effecting.zip" -d "$TMP"
-  SRC="$TMP/effecting-main"
+  curl -fsSL "https://codeload.github.com/$REPO/zip/refs/heads/main" -o "$TMP/video-cutter.zip"
+  unzip -q "$TMP/video-cutter.zip" -d "$TMP"
+  SRC="$TMP/video-cutter-main"
 fi
 mkdir -p "$DEST"
 if [ "$SRC" != "$DEST" ]; then
@@ -67,11 +67,11 @@ step "음성 인식 모델 받는 중 (약 1.6GB · 한 번만)"
   || note "모델은 처음 영상을 넣을 때 받을게요."
 
 # 5. 바탕화면 아이콘 (더블클릭하면 서버를 켜고 브라우저를 엽니다)
-step "바탕화면에 effecting 아이콘 만드는 중"
+step "바탕화면에 Video Cutter 아이콘 만드는 중"
 lsof -ti tcp:$PORT 2>/dev/null | xargs kill 2>/dev/null || true   # 예전 버전이 켜져 있으면 끔
 SCRIPT="$(mktemp -d)/launcher.applescript"
 cat > "$SCRIPT" <<APPLESCRIPT
--- effecting 실행기: 서버가 꺼져 있으면 조용히 켜고, 브라우저로 엽니다.
+-- Video Cutter 실행기: 서버가 꺼져 있으면 조용히 켜고, 브라우저로 엽니다.
 set appDir to "$DEST"
 set pageURL to "http://localhost:$PORT"
 set httpCode to do shell script "curl -s -o /dev/null -w '%{http_code}' " & pageURL & " || true"
@@ -86,6 +86,9 @@ end if
 open location pageURL
 APPLESCRIPT
 rm -rf "$APP"
+# 예전 이름(effecting) 아이콘이 있으면 정리
+OLD="$HOME/Desktop/effecting.app"
+if [ -d "$OLD" ] && osadecompile "$OLD/Contents/Resources/Scripts/main.scpt" 2>/dev/null | grep -q "localhost:$PORT"; then rm -rf "$OLD"; fi
 osacompile -o "$APP" "$SCRIPT"
 cp assets/effecting.icns "$APP/Contents/Resources/applet.icns"
 rm -f "$APP/Contents/Resources/Assets.car"
@@ -94,6 +97,6 @@ rm -f "$APP/Contents/Resources/Assets.car"
 codesign --force --deep -s - "$APP" 2>/dev/null || true
 touch "$APP"
 
-printf "\n\033[1m✓ 설치 끝!\033[0m 바탕화면의 \033[1meffecting\033[0m 아이콘을 더블클릭하세요.\n"
+printf "\n\033[1m✓ 설치 끝!\033[0m 바탕화면의 \033[1mVideo Cutter\033[0m 아이콘을 더블클릭하세요.\n"
 note "Dock 에 끌어다 두면 편해요."
 [ -n "${EFFECTING_NO_OPEN:-}" ] || open "$APP"

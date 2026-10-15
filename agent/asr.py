@@ -60,7 +60,7 @@ def transcribe(audio: np.ndarray, key: str, language: str = "ko") -> tuple[Trans
     import mlx_whisper  # 무거워서 지연 import
 
     r = mlx_whisper.transcribe(
-        audio.astype(np.float32), path_or_hf_repo=MODEL, language=language,
+        audio.astype(np.float32), path_or_hf_repo=_local_model(), language=language,
         word_timestamps=True, initial_prompt=PROMPT, condition_on_previous_text=False,
         verbose=None,
     )
@@ -75,6 +75,16 @@ def transcribe(audio: np.ndarray, key: str, language: str = "ko") -> tuple[Trans
     t = Transcript(r.get("language", language), segs)
     cp.write_text(json.dumps(t.to_json(), ensure_ascii=False), "utf-8")
     return t, False
+
+
+def _local_model() -> str:
+    """이미 받은 모델이 있으면 그 폴더를 직접 쓴다 → 영상 처리 중에는 인터넷에 접속하지 않음.
+    (없을 때만 처음 한 번 모델을 내려받는다. 영상·음성은 어디에도 보내지 않는다.)"""
+    from huggingface_hub import snapshot_download
+    try:
+        return snapshot_download(MODEL, local_files_only=True)
+    except Exception:  # noqa: BLE001 — 아직 안 받았으면 받는다
+        return snapshot_download(MODEL)
 
 
 _TRAIL = re.compile(r"[.,!?。、…]+$")

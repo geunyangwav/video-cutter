@@ -10,7 +10,7 @@ from typing import AsyncIterator
 
 from .asr import captions_from, transcribe
 from .draft import DRAFT_ROOT, Part, build_project
-from .face import caption_y, fixed_product_y, product_caption_ys, to_transform_y
+from .face import caption_y, product_fixed_y, to_transform_y
 from .filler import apply_text_edits, find_marks
 from .media import content_hash, probe
 from .silence import SilenceParams, detect_silences, keep_ranges, load_audio, subtract
@@ -89,10 +89,9 @@ async def _analyze(path: Path, p: SilenceParams, want_captions: bool, emit) -> A
             cy, placement = await asyncio.to_thread(caption_y, str(path), keeps)
             cap_y = to_transform_y(cy)
             if placement == "product":
-                # 자막마다 제품 윗변을 보고, 영상 전체에 한 위치로 고정 (대부분의 제품을 가리지 않는 높이)
-                ys = await asyncio.to_thread(product_caption_ys, str(path),
-                                             [(c.start + c.end) / 2 for c in captions])
-                cap_y = to_transform_y(fixed_product_y(ys))
+                # 영상 전체에서 한 위치로 고정. 자막이 나오는 장면들의 제품을 가장 덜 가리는 높이.
+                y = await asyncio.to_thread(product_fixed_y, str(path), [(c.start + c.end) / 2 for c in captions])
+                cap_y = to_transform_y(y)
     return Analysis(Part(info, keeps, captions, cap_y), levels, marks, transcript, placement)
 
 
