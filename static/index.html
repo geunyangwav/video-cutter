@@ -212,7 +212,7 @@ footer { margin-top: 64px; color: var(--ink-3); font-size: 11px; text-align: cen
 
   <section class="hero">
     <h1>캡컷 컷편집 자동화</h1>
-    <p>영상을 놓으면 무음과 잔말을 잘라내고 자막까지 달아,<br>CapCut 프로젝트로 만들어 둘게요.</p>
+    <p>영상을 놓으면 무음과 잔말을 잘라내서<br>CapCut 프로젝트로 만들어 둘게요.</p>
   </section>
 
   <section id="start">
@@ -233,7 +233,7 @@ footer { margin-top: 64px; color: var(--ink-3); font-size: 11px; text-align: cen
         <button data-p="loose">여유</button>
       </div>
       <span class="right">
-        <label class="switch"><input type="checkbox" id="caps" checked><i></i>자막 만들기</label>
+        <label class="switch"><input type="checkbox" id="caps"><i></i>자막 만들기</label>
         <button class="link" id="fineToggle">세부 조정 ›</button>
       </span>
     </div>
@@ -303,7 +303,7 @@ $("presets").addEventListener("click", (e) => {
 for (const k of ["min_silence", "sensitivity", "pad_after"]) {
   $(k).addEventListener("input", (e) => { params[k] = +e.target.value; setPresetUI(null); syncSliders(); save(null); });
 }
-try { $("caps").checked = localStorage.getItem("effecting.caps") !== "0"; } catch {}
+try { $("caps").checked = localStorage.getItem("effecting.caps") === "1"; } catch {}  // 자막은 기본 꺼짐
 $("caps").addEventListener("change", (e) => { try { localStorage.setItem("effecting.caps", e.target.checked ? "1" : "0"); } catch {} });
 $("fineToggle").addEventListener("click", () => {
   const open = $("fine").classList.toggle("open");

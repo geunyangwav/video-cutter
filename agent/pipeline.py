@@ -24,7 +24,7 @@ STEPS = [
     ("filler", "잔말 · NG"),
     ("draft", "드래프트 · 자막"),
 ]
-PLACEMENT = {"face": "자막 턱 아래", "product": "자막 제품 위"}
+PLACEMENT = {"face": "자막 턱 아래", "product": "자막 제품 위", "bottom": "자막 하단"}
 
 
 @dataclass

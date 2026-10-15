@@ -10,6 +10,7 @@ from .media import ffmpeg_exe
 
 CHIN_GAP = 0.062     # 턱 아래로 띄울 거리 (화면 높이 비율)
 DEFAULT_Y = 0.61     # 얼굴을 못 찾을 때 자막 중심 (위에서부터 비율)
+LANDSCAPE_Y = 0.88   # 가로 영상(롱폼) 자막: 화면 아래
 PRODUCT_Y = 0.29     # 제품 컷 기본 자막 중심 (제품 위쪽)
 PRODUCT_GAP = 0.05   # 제품 윗변 위로 띄울 거리
 PRODUCT_MIN = 0.12   # 이보다 위로는 안 올림 (상단 UI 자리)
@@ -104,6 +105,10 @@ def caption_y(path: str, keeps: list[tuple[float, float]], samples: int = 7) -> 
     """
     if not keeps:
         return DEFAULT_Y, "default"
+    from .media import probe
+    info = probe(path)
+    if info.width > info.height:
+        return LANDSCAPE_Y, "bottom"   # 가로(롱폼) 영상은 늘 화면 아래
     total = sum(e - s for s, e in keeps)
     times, acc, k = [], 0.0, 0
     for i in range(samples):  # 남긴 구간 위에 고르게 샘플
