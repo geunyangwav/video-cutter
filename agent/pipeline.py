@@ -80,7 +80,7 @@ async def _analyze(path: Path, p: SilenceParams, want_captions: bool, emit) -> A
         # 자막 줄바꿈은 무음 컷 기준 (조사 컷에서 '생각|합니다'가 갈라지지 않게)
         cuts = [(e, s) for (_, e), (s, _) in zip(keeps, keeps[1:])]
         if auto:
-            keeps = [r for r in subtract(keeps, auto) if r[1] - r[0] >= 0.12]
+            keeps = [r for r in subtract(keeps, auto) if r[1] - r[0] >= 0.2]  # 0.2s 미만 조각은 소리 끝자락뿐
         n_sug = sum(not m.auto for m in marks)
         await emit("filler", "done", f"{len(auto)}곳 다듬음" + (f" · 제안 {n_sug}개" if n_sug else ""), dt)
 

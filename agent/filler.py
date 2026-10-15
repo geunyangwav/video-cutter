@@ -130,6 +130,15 @@ def find_marks(t: Transcript, audio: np.ndarray | None = None,
         if covered < 0.3 * (ke - ks):
             marks.append(Mark(ks, ke, "음·어 (소리)", "filler", True))
 
+    # whisper 의 잔말 시각은 0.5s 가까이 어긋날 수 있다. 잔말 컷이 짧은 소리 덩어리(0.8s 이하)에
+    # 걸치면 덩어리 전체를 잘라, '어'의 끝자락 같은 짧은 조각(딸깍 소리)이 남지 않게 한다.
+    for m in marks:
+        if m.kind != "filler":
+            continue
+        for ks, ke in keeps:
+            if ke - ks <= 0.8 and m.start < ke and m.end > ks:
+                m.start, m.end = min(m.start, ks), max(m.end, ke)
+
     # NG: 같은 2~6 단어 묶음이 바로 이어서 반복 → 앞쪽 시도를 제안
     norms = [_norm(w) for w in words]
     i = 0
