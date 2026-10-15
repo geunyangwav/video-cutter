@@ -88,7 +88,7 @@ APPLESCRIPT
 rm -rf "$APP"
 # 예전 이름(effecting) 아이콘이 있으면 정리
 OLD="$HOME/Desktop/effecting.app"
-if [ -d "$OLD" ] && osadecompile "$OLD/Contents/Resources/Scripts/main.scpt" 2>/dev/null | grep -q "localhost:$PORT"; then rm -rf "$OLD"; fi
+if [ -z "${EFFECTING_APP:-}" ] && [ -d "$OLD" ] && osadecompile "$OLD/Contents/Resources/Scripts/main.scpt" 2>/dev/null | grep -q "localhost:$PORT"; then rm -rf "$OLD"; fi
 osacompile -o "$APP" "$SCRIPT"
 cp assets/effecting.icns "$APP/Contents/Resources/applet.icns"
 rm -f "$APP/Contents/Resources/Assets.car"
